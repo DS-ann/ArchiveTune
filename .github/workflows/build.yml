@@ -1,4 +1,4 @@
-name: Build ArchiveTune
+name: Build ArchiveTune apk
 on:
   workflow_dispatch:
 
