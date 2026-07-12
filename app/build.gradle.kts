@@ -42,7 +42,7 @@ android {
 
     defaultConfig {
     applicationId = "moe.rukamori.archivetune"
-        minSdk = 26
+        minSdk = 23
         targetSdk = 37
         versionCode = 138
         versionName = "13.7.0"
