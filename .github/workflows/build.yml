@@ -1,46 +1,59 @@
-name: Build Android APK
+name: Build ArchiveTune
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
-    steps:
-      # ================= Checkout =================
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    strategy:
+      matrix:
+        include:
+          - distribution: gms
+            device: mobile
+            abi: universal
+          - distribution: gms
+            device: mobile
+            abi: arm64
+          - distribution: gms
+            device: mobile
+            abi: armeabi
 
-      # ================= Java Setup =================
-      - name: Setup Java 17
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: "21"
 
-      # ================= Make Gradle Executable =================
-      - name: Make Gradlew Executable
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
         run: chmod +x gradlew
 
-      # ================= Build APK =================
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --parallel --daemon
-
-      # ================= Prepare Deploy Folder =================
-      - name: Prepare deploy folder
+      - name: Resolve task
+        id: task
         run: |
-          mkdir -p deploy
-          cp app/build/outputs/apk/debug/*.apk deploy/
+          DIST="${{ matrix.distribution }}"
+          DEV="${{ matrix.device }}"
+          ABI="${{ matrix.abi }}"
 
+          CAP_DEV="$(tr '[:lower:]' '[:upper:]' <<< ${DEV:0:1})${DEV:1}"
+          CAP_ABI="$(tr '[:lower:]' '[:upper:]' <<< ${ABI:0:1})${ABI:1}"
 
-      # ================= Upload Artifacts =================
-      - name: Upload APKs & index.html as artifact
+          echo "TASK=assemble${DIST^}${CAP_DEV}${CAP_ABI}Release" >> $GITHUB_ENV
+
+      - name: Build
+        run: ./gradlew $TASK
+
+      - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
-          name: RanjanaSmartHome-APK
-          path: deploy/
+          name: ${{ matrix.distribution }}-${{ matrix.device }}-${{ matrix.abi }}
+          path: app/build/outputs/apk/**/release/*.apk
