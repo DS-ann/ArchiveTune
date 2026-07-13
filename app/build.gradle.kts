@@ -13,7 +13,7 @@ val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
-
+ 
 val discordApplicationId =
     (
         localProperties.getProperty("DISCORD_APPLICATION_ID")
