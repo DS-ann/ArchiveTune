@@ -176,9 +176,9 @@ android {
     }
 
     compileOptions {
-        isCoreLibraryDesugaringEnabled = false
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        isCoreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     buildFeatures {
@@ -222,7 +222,7 @@ android {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(17)
 }
 
 ksp {
@@ -275,7 +275,6 @@ dependencies {
 
     implementation(libs.shimmer)
 
-    // Glance Widget support
     implementation("androidx.glance:glance:1.1.1")
     implementation("androidx.glance:glance-appwidget:1.1.1")
     implementation("androidx.glance:glance-material3:1.1.1")
@@ -384,18 +383,20 @@ androidComponents {
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_21)
+        jvmTarget.set(JvmTarget.JVM_17)
         optIn.add("androidx.compose.material3.ExperimentalMaterial3Api")
         optIn.add("androidx.compose.material3.ExperimentalMaterial3ExpressiveApi")
         freeCompilerArgs.addAll(
             "-opt-in=kotlin.RequiresOptIn"
         )
-        // Suppress warnings
         suppressWarnings.set(true)
     }
 }
 
 configurations.configureEach {
+    // capsule-android 2.1.1-patch2 declares minSdk 24. ArchiveTune does not
+    // reference its API, so exclude this transitive artifact for API 23 builds.
+    exclude(group = "com.mocharealm.gaze", module = "capsule-android")
     resolutionStrategy.force(
         "androidx.compose.runtime:runtime:${libs.versions.compose.get()}",
         "androidx.compose.foundation:foundation:${libs.versions.compose.get()}",

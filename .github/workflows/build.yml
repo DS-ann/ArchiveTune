@@ -4,13 +4,13 @@ on:
   push:
     branches:
       - main
+      - android6-compat
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-
     - uses: actions/checkout@v4
 
     - name: Setup Java
