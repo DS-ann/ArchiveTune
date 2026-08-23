@@ -15,31 +15,26 @@ if (localPropertiesFile.exists()) {
 }
  
 val discordApplicationId =
-    (
-        localProperties.getProperty("DISCORD_APPLICATION_ID")
-            ?: System.getenv("DISCORD_APPLICATION_ID")
-            ?: "1165706613961789445"
-        ).trim()
+    (localProperties.getProperty("DISCORD_APPLICATION_ID")
+        ?: System.getenv("DISCORD_APPLICATION_ID")
+        ?: "1165706613961789445").trim()
 val discordApplicationIdLong = discordApplicationId.toLongOrNull() ?: 1165706613961789445L
 val discordRedirectScheme = "discord-$discordApplicationId"
 val releaseKeystoreFile = file("keystore/release.keystore")
-val releaseStorePassword =
-    System.getenv("STORE_PASSWORD")?.takeIf { it.isNotBlank() }
-        ?: System.getenv("KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() }
+val releaseStorePassword = System.getenv("STORE_PASSWORD")?.takeIf { it.isNotBlank() }
+    ?: System.getenv("KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() }
 val releaseKeyAlias = System.getenv("KEY_ALIAS")?.takeIf { it.isNotBlank() }
 val releaseKeyPassword = System.getenv("KEY_PASSWORD")?.takeIf { it.isNotBlank() }
-val hasReleaseSigningConfig =
-    releaseKeystoreFile.isFile &&
-        releaseStorePassword != null &&
-        releaseKeyAlias != null &&
-        releaseKeyPassword != null
+val hasReleaseSigningConfig = releaseKeystoreFile.isFile &&
+    releaseStorePassword != null && releaseKeyAlias != null && releaseKeyPassword != null
 
 android {
     namespace = "moe.rukamori.archivetune"
     compileSdk = 37
 
     defaultConfig {
-    applicationId = "moe.rukamori.archivetune"
+        applicationId = "moe.rukamori.archivetune"
+        // Android 6.0 / API 23 compatibility.
         minSdk = 23
         targetSdk = 37
         versionCode = 138
@@ -48,41 +43,27 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
 
-        val lastfmApiKey =
-            localProperties.getProperty("LASTFM_API_KEY")
-                ?: System.getenv("LASTFM_API_KEY")
-                ?: ""
-        val lastfmSecret =
-            localProperties.getProperty("LASTFM_SECRET")
-                ?: System.getenv("LASTFM_SECRET")
-                ?: ""
+        val lastfmApiKey = localProperties.getProperty("LASTFM_API_KEY")
+            ?: System.getenv("LASTFM_API_KEY") ?: ""
+        val lastfmSecret = localProperties.getProperty("LASTFM_SECRET")
+            ?: System.getenv("LASTFM_SECRET") ?: ""
         buildConfigField("String", "LASTFM_API_KEY", "\"$lastfmApiKey\"")
         buildConfigField("String", "LASTFM_SECRET", "\"$lastfmSecret\"")
 
-        val togetherBearerToken =
-            localProperties.getProperty("TOGETHER_BEARER_TOKEN")
-                ?: System.getenv("TOGETHER_BEARER_TOKEN")
-                ?: ""
+        val togetherBearerToken = localProperties.getProperty("TOGETHER_BEARER_TOKEN")
+            ?: System.getenv("TOGETHER_BEARER_TOKEN") ?: ""
         buildConfigField("String", "TOGETHER_BEARER_TOKEN", "\"$togetherBearerToken\"")
 
-        val canvasBearerToken =
-            localProperties.getProperty("CANVAS_BEARER_TOKEN")
-                ?: System.getenv("CANVAS_BEARER_TOKEN")
-                ?: ""
+        val canvasBearerToken = localProperties.getProperty("CANVAS_BEARER_TOKEN")
+            ?: System.getenv("CANVAS_BEARER_TOKEN") ?: ""
         buildConfigField("String", "CANVAS_BEARER_TOKEN", "\"$canvasBearerToken\"")
 
-        val extractorBearer =
-            localProperties.getProperty("EXTRACTOR_BEARER")
-                ?: System.getenv("EXTRACTOR_BEARER")
-                ?: ""
+        val extractorBearer = localProperties.getProperty("EXTRACTOR_BEARER")
+            ?: System.getenv("EXTRACTOR_BEARER") ?: ""
         buildConfigField("String", "EXTRACTOR_BEARER", "\"$extractorBearer\"")
 
-        val nightlyBuildHash =
-            (
-                localProperties.getProperty("NIGHTLY_BUILD_HASH")
-                    ?: System.getenv("NIGHTLY_BUILD_HASH")
-                    ?: ""
-                ).trim()
+        val nightlyBuildHash = (localProperties.getProperty("NIGHTLY_BUILD_HASH")
+            ?: System.getenv("NIGHTLY_BUILD_HASH") ?: "").trim()
         buildConfigField("String", "NIGHTLY_BUILD_HASH", "\"$nightlyBuildHash\"")
         buildConfigField("String", "DISTRIBUTION", "\"gms\"")
         buildConfigField("boolean", "UPDATER_AVAILABLE", "true")
@@ -119,9 +100,7 @@ android {
         }
         create("universal") {
             dimension = "abi"
-            ndk {
-                abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-            }
+            ndk { abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64") }
             buildConfigField("String", "ARCHITECTURE", "\"universal\"")
         }
         create("arm64") {
@@ -159,15 +138,10 @@ android {
 
     buildTypes {
         release {
-            if (hasReleaseSigningConfig) {
-                signingConfig = signingConfigs.getByName("release")
-            }
+            if (hasReleaseSigningConfig) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         debug {
             applicationIdSuffix = ".debug"
@@ -176,9 +150,10 @@ android {
     }
 
     compileOptions {
-        isCoreLibraryDesugaringEnabled = false
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        // Keep bytecode at Java 17 and let D8/desugaring backport newer library APIs to API 23.
+        isCoreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     buildFeatures {
@@ -199,17 +174,12 @@ android {
         checkDependencies = false
     }
 
-    androidResources {
-        generateLocaleConfig = true
-    }
+    androidResources { generateLocaleConfig = true }
 
     packaging {
         jniLibs {
             useLegacyPackaging = false
-            keepDebugSymbols += listOf(
-                "**/libandroidx.graphics.path.so",
-                "**/libdatastore_shared_counter.so"
-            )
+            keepDebugSymbols += listOf("**/libandroidx.graphics.path.so", "**/libdatastore_shared_counter.so")
         }
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -218,29 +188,22 @@ android {
             excludes += "META-INF/LICENSE.md"
         }
     }
-
 }
 
-kotlin {
-    jvmToolchain(21)
-}
+kotlin { jvmToolchain(17) }
 
-ksp {
-    arg("room.schemaLocation", "$projectDir/schemas")
-}
+ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 
 dependencies {
     implementation(libs.guava)
     implementation(libs.coroutines.guava)
     implementation(libs.concurrent.futures)
-
     implementation(libs.activity)
     implementation(libs.navigation)
     implementation(libs.hilt.navigation)
     implementation(libs.datastore)
     implementation(libs.work.runtime)
     implementation("androidx.browser:browser:1.10.0")
-
     implementation(libs.compose.runtime)
     implementation(libs.compose.foundation)
     implementation(libs.compose.ui)
@@ -251,11 +214,9 @@ dependencies {
     implementation(libs.compose.animation)
     implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.reorderable)
-
     implementation(libs.viewmodel)
     implementation(libs.viewmodel.compose)
     implementation(libs.lifecycle.runtime.compose)
-
     implementation(libs.material3)
     implementation(libs.palette)
     implementation(libs.androidsvg)
@@ -268,18 +229,13 @@ dependencies {
     implementation(libs.markwon.image)
     implementation(libs.markwon.linkify)
     implementation(libs.markwon.simple.ext)
-
     implementation(libs.coil)
     implementation(libs.coil.gif)
     implementation(libs.coil.network.okhttp)
-
     implementation(libs.shimmer)
-
-    // Glance Widget support
     implementation("androidx.glance:glance:1.1.1")
     implementation("androidx.glance:glance-appwidget:1.1.1")
     implementation("androidx.glance:glance-material3:1.1.1")
-
     implementation(libs.media3)
     implementation("androidx.media3:media3-exoplayer-hls:${libs.versions.media3.get()}")
     implementation(libs.media3.session)
@@ -289,20 +245,16 @@ dependencies {
     add("gmsImplementation", libs.media3.cast)
     add("gmsImplementation", libs.mediarouter)
     implementation(libs.squigglyslider)
-
     implementation(libs.room.runtime)
     implementation(libs.kuromoji.ipadic)
     ksp(libs.room.compiler)
     implementation(libs.room.ktx)
-
     implementation(libs.apache.lang3)
-
     implementation(libs.hilt)
     implementation(libs.re2j)
     annotationProcessor(libs.kotlin.metadata.jvm)
     ksp(libs.hilt.compiler)
     ksp(libs.kotlin.metadata.jvm)
-
     implementation(project(":core"))
     implementation(project(":lyrics:kugou"))
     implementation(project(":lyrics:lrclib"))
@@ -318,7 +270,6 @@ dependencies {
     implementation(project(":moriextractor"))
     implementation(project(":morideobfuscator"))
     implementation("com.materialkolor:material-kolor:5.0.0-alpha07")
-
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.serialization.json)
@@ -327,9 +278,7 @@ dependencies {
     implementation(libs.ktor.server.cio)
     implementation(libs.ktor.server.websockets)
     implementation(libs.ktor.server.content.negotiation)
-
     coreLibraryDesugaring(libs.desugaring)
-
     implementation(libs.timber)
     testImplementation(libs.junit)
     testImplementation(libs.turbine)
@@ -338,59 +287,35 @@ dependencies {
     implementation("androidx.compose.material3.adaptive:adaptive:1.3.0-rc01")
     implementation(libs.accompanist.lyrics.ui)
     implementation(libs.accompanist.lyrics.core)
-
     implementation("org.json:json:20240303")
 }
 
 androidComponents {
     onVariants(selector().all()) { variant ->
-        val capitalizedVariantName =
-            variant.name.replaceFirstChar { character ->
-                if (character.isLowerCase()) character.titlecase() else character.toString()
-            }
-        val generateIconPack =
-            tasks.register<GenerateIconPackTask>("generate${capitalizedVariantName}IconPack") {
-                metadataFile.set(rootProject.layout.projectDirectory.file("IconPack/metadata.json"))
-                svgDirectory.set(rootProject.layout.projectDirectory.dir("IconPack/svg"))
-                applicationId.set(variant.applicationId)
-                targetActivityClassName.set("moe.rukamori.archivetune.MainActivity")
-                resourceOutputDirectory.set(
-                    layout.buildDirectory.dir("generated/iconPack/${variant.name}/res"),
-                )
-                assetOutputDirectory.set(
-                    layout.buildDirectory.dir("generated/iconPack/${variant.name}/assets"),
-                )
-                manifestOutputFile.set(
-                    layout.buildDirectory.file(
-                        "generated/iconPack/${variant.name}/AndroidManifest.xml",
-                    ),
-                )
-            }
-
-        variant.sources.res?.addGeneratedSourceDirectory(
-            generateIconPack,
-            GenerateIconPackTask::resourceOutputDirectory,
-        )
-        variant.sources.assets?.addGeneratedSourceDirectory(
-            generateIconPack,
-            GenerateIconPackTask::assetOutputDirectory,
-        )
-        variant.sources.manifests.addGeneratedManifestFile(
-            generateIconPack,
-            GenerateIconPackTask::manifestOutputFile,
-        )
+        val capitalizedVariantName = variant.name.replaceFirstChar { character ->
+            if (character.isLowerCase()) character.titlecase() else character.toString()
+        }
+        val generateIconPack = tasks.register<GenerateIconPackTask>("generate${capitalizedVariantName}IconPack") {
+            metadataFile.set(rootProject.layout.projectDirectory.file("IconPack/metadata.json"))
+            svgDirectory.set(rootProject.layout.projectDirectory.dir("IconPack/svg"))
+            applicationId.set(variant.applicationId)
+            targetActivityClassName.set("moe.rukamori.archivetune.MainActivity")
+            resourceOutputDirectory.set(layout.buildDirectory.dir("generated/iconPack/${variant.name}/res"))
+            assetOutputDirectory.set(layout.buildDirectory.dir("generated/iconPack/${variant.name}/assets"))
+            manifestOutputFile.set(layout.buildDirectory.file("generated/iconPack/${variant.name}/AndroidManifest.xml"))
+        }
+        variant.sources.res?.addGeneratedSourceDirectory(generateIconPack, GenerateIconPackTask::resourceOutputDirectory)
+        variant.sources.assets?.addGeneratedSourceDirectory(generateIconPack, GenerateIconPackTask::assetOutputDirectory)
+        variant.sources.manifests.addGeneratedManifestFile(generateIconPack, GenerateIconPackTask::manifestOutputFile)
     }
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_21)
+        jvmTarget.set(JvmTarget.JVM_17)
         optIn.add("androidx.compose.material3.ExperimentalMaterial3Api")
         optIn.add("androidx.compose.material3.ExperimentalMaterial3ExpressiveApi")
-        freeCompilerArgs.addAll(
-            "-opt-in=kotlin.RequiresOptIn"
-        )
-        // Suppress warnings
+        freeCompilerArgs.addAll("-opt-in=kotlin.RequiresOptIn")
         suppressWarnings.set(true)
     }
 }
