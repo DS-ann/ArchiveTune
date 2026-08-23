@@ -192,6 +192,14 @@ android {
 
 kotlin { jvmToolchain(17) }
 
+// The current lyrics dependency graph brings in Gaze Capsule, whose Android artifact
+// declares minSdk 24. ArchiveTune does not use Capsule directly, so remove that
+// transitive artifact rather than overriding its manifest requirement and risking
+// API-24-only calls on Android 6.
+configurations.configureEach {
+    exclude(group = "com.mocharealm.gaze", module = "capsule-android")
+}
+
 ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 
 dependencies {
@@ -218,116 +226,3 @@ dependencies {
     implementation(libs.viewmodel.compose)
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.material3)
-    implementation(libs.palette)
-    implementation(libs.androidsvg)
-    implementation(libs.aboutlibraries.core)
-    implementation(libs.markwon.core)
-    implementation(libs.markwon.ext.strikethrough)
-    implementation(libs.markwon.ext.tables)
-    implementation(libs.markwon.ext.tasklist)
-    implementation(libs.markwon.html)
-    implementation(libs.markwon.image)
-    implementation(libs.markwon.linkify)
-    implementation(libs.markwon.simple.ext)
-    implementation(libs.coil)
-    implementation(libs.coil.gif)
-    implementation(libs.coil.network.okhttp)
-    implementation(libs.shimmer)
-    implementation("androidx.glance:glance:1.1.1")
-    implementation("androidx.glance:glance-appwidget:1.1.1")
-    implementation("androidx.glance:glance-material3:1.1.1")
-    implementation(libs.media3)
-    implementation("androidx.media3:media3-exoplayer-hls:${libs.versions.media3.get()}")
-    implementation(libs.media3.session)
-    implementation(libs.media3.okhttp)
-    implementation("androidx.media3:media3-ui:${libs.versions.media3.get()}")
-    implementation("androidx.media3:media3-ui-compose:${libs.versions.media3.get()}")
-    add("gmsImplementation", libs.media3.cast)
-    add("gmsImplementation", libs.mediarouter)
-    implementation(libs.squigglyslider)
-    implementation(libs.room.runtime)
-    implementation(libs.kuromoji.ipadic)
-    ksp(libs.room.compiler)
-    implementation(libs.room.ktx)
-    implementation(libs.apache.lang3)
-    implementation(libs.hilt)
-    implementation(libs.re2j)
-    annotationProcessor(libs.kotlin.metadata.jvm)
-    ksp(libs.hilt.compiler)
-    ksp(libs.kotlin.metadata.jvm)
-    implementation(project(":core"))
-    implementation(project(":lyrics:kugou"))
-    implementation(project(":lyrics:lrclib"))
-    implementation(project(":lyrics:simpmusic"))
-    implementation(project(":lyrics:paxsenix"))
-    implementation(project(":lyrics:betterlyrics"))
-    implementation(project(":lyrics:unison"))
-    implementation(project(":lyrics:youlyplus"))
-    implementation(project(":lastfm"))
-    implementation(project(":canvas"))
-    implementation(project(":shazamkit"))
-    implementation(project(":spotifycore"))
-    implementation(project(":moriextractor"))
-    implementation(project(":morideobfuscator"))
-    implementation("com.materialkolor:material-kolor:5.0.0-alpha07")
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.okhttp)
-    implementation(libs.ktor.serialization.json)
-    implementation(libs.ktor.client.websockets)
-    implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.cio)
-    implementation(libs.ktor.server.websockets)
-    implementation(libs.ktor.server.content.negotiation)
-    coreLibraryDesugaring(libs.desugaring)
-    implementation(libs.timber)
-    testImplementation(libs.junit)
-    testImplementation(libs.turbine)
-    implementation(libs.translator)
-    implementation("androidx.lifecycle:lifecycle-process:2.11.0")
-    implementation("androidx.compose.material3.adaptive:adaptive:1.3.0-rc01")
-    implementation(libs.accompanist.lyrics.ui)
-    implementation(libs.accompanist.lyrics.core)
-    implementation("org.json:json:20240303")
-}
-
-androidComponents {
-    onVariants(selector().all()) { variant ->
-        val capitalizedVariantName = variant.name.replaceFirstChar { character ->
-            if (character.isLowerCase()) character.titlecase() else character.toString()
-        }
-        val generateIconPack = tasks.register<GenerateIconPackTask>("generate${capitalizedVariantName}IconPack") {
-            metadataFile.set(rootProject.layout.projectDirectory.file("IconPack/metadata.json"))
-            svgDirectory.set(rootProject.layout.projectDirectory.dir("IconPack/svg"))
-            applicationId.set(variant.applicationId)
-            targetActivityClassName.set("moe.rukamori.archivetune.MainActivity")
-            resourceOutputDirectory.set(layout.buildDirectory.dir("generated/iconPack/${variant.name}/res"))
-            assetOutputDirectory.set(layout.buildDirectory.dir("generated/iconPack/${variant.name}/assets"))
-            manifestOutputFile.set(layout.buildDirectory.file("generated/iconPack/${variant.name}/AndroidManifest.xml"))
-        }
-        variant.sources.res?.addGeneratedSourceDirectory(generateIconPack, GenerateIconPackTask::resourceOutputDirectory)
-        variant.sources.assets?.addGeneratedSourceDirectory(generateIconPack, GenerateIconPackTask::assetOutputDirectory)
-        variant.sources.manifests.addGeneratedManifestFile(generateIconPack, GenerateIconPackTask::manifestOutputFile)
-    }
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
-        optIn.add("androidx.compose.material3.ExperimentalMaterial3Api")
-        optIn.add("androidx.compose.material3.ExperimentalMaterial3ExpressiveApi")
-        freeCompilerArgs.addAll("-opt-in=kotlin.RequiresOptIn")
-        suppressWarnings.set(true)
-    }
-}
-
-configurations.configureEach {
-    resolutionStrategy.force(
-        "androidx.compose.runtime:runtime:${libs.versions.compose.get()}",
-        "androidx.compose.foundation:foundation:${libs.versions.compose.get()}",
-        "androidx.compose.ui:ui:${libs.versions.compose.get()}",
-        "androidx.compose.ui:ui-util:${libs.versions.compose.get()}",
-        "androidx.compose.ui:ui-tooling:${libs.versions.compose.get()}",
-        "androidx.compose.animation:animation-graphics:${libs.versions.compose.get()}",
-        "org.jetbrains.kotlin:kotlin-metadata-jvm:${libs.versions.kotlinMetadata.get()}",
-    )
-}
