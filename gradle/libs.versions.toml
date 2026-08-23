@@ -37,7 +37,8 @@ timber = "5.0.1"
 kuromojiIpadic = "0.9.0"
 extractor = "0.26.3"
 translator = "1.1.1"
-rhino = "1.9.1"
+# Rhino 1.9.x emits MethodHandle.invoke/invokeExact bytecode, which cannot be dexed for API 23.
+rhino = "1.7.15"
 markwon = "4.6.2"
 okhttp = "5.4.0"
 accompanist = "1.0.19"
@@ -147,7 +148,6 @@ accompanist-lyrics-ui = { module = "com.mocharealm.accompanist:lyrics-ui", versi
 accompanist-lyrics-core = { module = "com.mocharealm.accompanist:lyrics-core", version.ref = "accompanist-core" }
 androidsvg = { module = "com.caverock:androidsvg-aar", version.ref = "androidsvg" }
 aboutlibraries-core = { module = "com.mikepenz:aboutlibraries-core", version.ref = "aboutLibraries" }
-
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
